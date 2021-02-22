@@ -1,6 +1,7 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { isEmpty,size } from 'lodash'
 import shortid from 'shortid'
+import { getCollection } from './action'
 
 
 
@@ -9,13 +10,30 @@ function App() {
   const [tasks, setTasks] = useState([])
   const [editMode, setEditMode] = useState(false)
   const [id, setId] = useState("")
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    (async()=>{
+      const result = await getCollection("tasks")
+      console.log(result)
+    })()
+  }, [])
+
+const validForm = () => {
+  let isValid = true
+  setError(null)
+  if(isEmpty(task)){
+    setError("Debes ingresar una tarea")
+    isValid = false 
+  }
+  return isValid
+}
 
   const addTask = (e) => {
     e.preventDefault()
-    if(isEmpty(task)){
-      console.log("Task Empty")
-      return 
-    }
+  if (!validForm()){
+    return
+  }
 
     const newTask = {
       id: shortid.generate(),
@@ -29,9 +47,8 @@ function App() {
 
   const saveTask = (e) => {
     e.preventDefault()
-    if(isEmpty(task)){
-      console.log("Task Empty")
-      return 
+    if (!validForm()){
+      return
     }
 
     const editedTasks = tasks.map(item => item.id === id ? {id, name: task} : item)
@@ -62,7 +79,7 @@ function App() {
 
          {
            size(tasks) === 0 ? (
-             <h5 className="text-center">Aun no hay tareas</h5>
+             <li className="list-group-item">Aun no hay tareas</li>
            ): (
              <ul className="list-group">
             {
@@ -92,6 +109,9 @@ function App() {
        <div className="col-4">
        <h4 className="text-center">{ editMode ? "Modificar Tarea":"Agregar tarea"}</h4>
        <form onSubmit={ editMode ? saveTask : addTask}>
+         {
+          error && <span className="text-danger">{error}</span>
+         }      
          <input
          type="text"
          className="form-control mb-2"
